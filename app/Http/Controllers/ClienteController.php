@@ -15,8 +15,7 @@ class ClienteController extends Controller
 
     public function store(Request $request)
     {
-        // comentar validações para testar com dados fictícios
-        $request->validate([
+        /*$request->validate([
             'cnpj' => 'cnpj|formato_cnpj',
             'razao_social' => 'required',
             'nome_contato' => 'required',
@@ -29,7 +28,7 @@ class ClienteController extends Controller
             'endereco.*.cidade' => 'required',
             'endereco.*.estado' => 'required',
             'endereco.*.cep' => 'formato_cep',
-        ]);
+        ]);*/
 
         $clienteData = $request->only(['cnpj', 'razao_social', 'nome_contato', 'telefone']);
         $enderecosData = $request->input('endereco');
@@ -39,35 +38,41 @@ class ClienteController extends Controller
         // Salvar os endereços
         $enderecos = [];
         if (!is_null($enderecosData)) {
-        foreach ($enderecosData as $enderecoData) {
-            // Obter latitude e longitude usando a API do Google Maps Geocoding
-            $enderecoCompleto = "{$enderecoData['logradouro']}, {$enderecoData['numero']}, {$enderecoData['bairro']}, {$enderecoData['cidade']}, {$enderecoData['estado']}, {$enderecoData['cep']}";
-            $enderecoFormatado = urlencode($enderecoCompleto);
-            $apiKey = "chave da api aqui";
-            $url = "https://maps.googleapis.com/maps/api/geocode/json?address={$enderecoFormatado}&key={$apiKey}";
+            foreach ($enderecosData as $enderecoData) {
+                // Obter latitude e longitude usando a API do Google Maps Geocoding
+                $enderecoCompleto = "{$enderecoData['logradouro']}, {$enderecoData['numero']}, {$enderecoData['bairro']}, {$enderecoData['cidade']}, {$enderecoData['estado']}, {$enderecoData['cep']}";
+                $enderecoFormatado = urlencode($enderecoCompleto);
+                $apiKey = "SUA_API_KEY";
 
-            $response = file_get_contents($url);
-            $data = json_decode($response);
+                // Montar a URL da API do Google Maps
+                $enderecoUrl = "https://maps.googleapis.com/maps/api/geocode/json?address={$enderecoFormatado}&key={$apiKey}";
 
-            if ($data->status === "OK") {
-                $latitude = $data->results[0]->geometry->location->lat;
-                $longitude = $data->results[0]->geometry->location->lng;
+                $response = file_get_contents($enderecoUrl);
+                $data = json_decode($response);
 
-                // Adicionar latitude e longitude ao objeto de endereço
-                $enderecoData['latitude'] = $latitude;
-                $enderecoData['longitude'] = $longitude;
-            } else {
-                // Define latitude e longitude como nulas
-                $enderecoData['latitude'] = null;
-                $enderecoData['longitude'] = null;
+                if ($data->status === "OK") {
+                    $latitude = $data->results[0]->geometry->location->lat;
+                    $longitude = $data->results[0]->geometry->location->lng;
+
+                    // Adicionar latitude e longitude ao objeto de endereço
+                    $enderecoData['latitude'] = $latitude;
+                    $enderecoData['longitude'] = $longitude;
+                } else {
+                    // Define latitude e longitude como nulas
+                    $enderecoData['latitude'] = null;
+                    $enderecoData['longitude'] = null;
+                }
+
+                // Salvar o endereço
+                $endereco = new Endereco($enderecoData);
+
+                // Adicionar a URL ao objeto de endereço
+                $endereco->url = $enderecoUrl;
+
+                $cliente->enderecos()->save($endereco);
+                $enderecos[] = $endereco;
             }
-
-            // Salvar o endereço
-            $endereco = new Endereco($enderecoData);
-            $cliente->enderecos()->save($endereco);
-            $enderecos[] = $endereco;
         }
-    }
 
         // Associar os endereços ao cliente
         $cliente->enderecos = $enderecos;

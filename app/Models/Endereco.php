@@ -17,6 +17,7 @@ class Endereco extends Model
         'cidade',
         'estado',
         'cep',
+        'url'
     ];
 
 

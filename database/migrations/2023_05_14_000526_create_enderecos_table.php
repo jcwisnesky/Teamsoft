@@ -23,8 +23,9 @@ return new class extends Migration
             $table->string('cidade');
             $table->string('estado');
             $table->string('cep');
-            $table->decimal('latitude', 10, 8)->nullable();
-            $table->decimal('longitude', 10, 8)->nullable();
+            $table->decimal('latitude', 10, 8)->virtualAs('null')->nullable();
+            $table->decimal('longitude', 10, 8)->virtualAs('null')->nullable();
+            $table->string('url');
             $table->timestamps();
         });
     }
