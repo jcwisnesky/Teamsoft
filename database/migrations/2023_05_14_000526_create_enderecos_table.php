@@ -18,13 +18,13 @@ return new class extends Migration
             $table->foreignId('cliente_id')->constrained()->onDelete('cascade');
             $table->string('logradouro');
             $table->string('numero');
-            $table->string('complemento');
+            $table->string('complemento')->nullable();
             $table->string('bairro');
             $table->string('cidade');
             $table->string('estado');
             $table->string('cep');
-            $table->string('latitude');
-            $table->string('longitude');
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 10, 8)->nullable();
             $table->timestamps();
         });
     }

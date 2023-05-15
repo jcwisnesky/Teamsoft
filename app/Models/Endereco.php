@@ -13,15 +13,12 @@ class Endereco extends Model
 
         'logradouro',
         'numero',
-        'complemento',
         'bairro',
         'cidade',
         'estado',
         'cep',
     ];
-    protected $hidden = [
-        'cliente_id'
-    ];
+
 
     public function cliente(){
         return $this->belongsTo(Cliente::class);
