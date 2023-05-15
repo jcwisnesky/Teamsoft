@@ -15,7 +15,7 @@ class ClienteController extends Controller
 
     public function store(Request $request)
     {
-        /*$request->validate([
+        $request->validate([
             'cnpj' => 'cnpj|formato_cnpj',
             'razao_social' => 'required',
             'nome_contato' => 'required',
@@ -28,7 +28,7 @@ class ClienteController extends Controller
             'endereco.*.cidade' => 'required',
             'endereco.*.estado' => 'required',
             'endereco.*.cep' => 'formato_cep',
-        ]);*/
+        ]);
 
         $clienteData = $request->only(['cnpj', 'razao_social', 'nome_contato', 'telefone']);
         $enderecosData = $request->input('endereco');
