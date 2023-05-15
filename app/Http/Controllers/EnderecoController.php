@@ -16,7 +16,7 @@ class EnderecoController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+       /* $request->validate([
             'cliente_id' => 'required',
             'logradouro' => 'required',
             'numero' => 'required',
@@ -24,7 +24,7 @@ class EnderecoController extends Controller
             'cidade' => 'required',
             'estado' => 'required',
             'cep' => 'required',
-        ]);
+        ]);*/
 
         $endereco = Endereco::create($request->all());
 
@@ -44,14 +44,7 @@ class EnderecoController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'logradouro' => 'required',
-            'numero' => 'required',
-            'bairro' => 'required',
-            'cidade' => 'required',
-            'estado' => 'required',
-            'cep' => 'required',
-        ]);
+
 
         $endereco = Endereco::find($id);
 

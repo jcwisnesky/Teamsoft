@@ -15,11 +15,12 @@ class ClienteController extends Controller
 
     public function store(Request $request)
     {
+        // comentar validações para testar com dados fictícios
         $request->validate([
-            'cnpj' => 'required',
+            'cnpj' => 'cnpj|formato_cnpj',
             'razao_social' => 'required',
             'nome_contato' => 'required',
-            'telefone' => 'required',
+            'telefone' => 'telefone_com_ddd',
             'endereco' => 'required|array',
             'endereco.*.logradouro' => 'required',
             'endereco.*.numero' => 'required',
@@ -27,7 +28,7 @@ class ClienteController extends Controller
             'endereco.*.bairro' => 'required',
             'endereco.*.cidade' => 'required',
             'endereco.*.estado' => 'required',
-            'endereco.*.cep' => 'required',
+            'endereco.*.cep' => 'formato_cep',
         ]);
 
         $clienteData = $request->only(['cnpj', 'razao_social', 'nome_contato', 'telefone']);
@@ -37,11 +38,12 @@ class ClienteController extends Controller
 
         // Salvar os endereços
         $enderecos = [];
+        if (!is_null($enderecosData)) {
         foreach ($enderecosData as $enderecoData) {
             // Obter latitude e longitude usando a API do Google Maps Geocoding
             $enderecoCompleto = "{$enderecoData['logradouro']}, {$enderecoData['numero']}, {$enderecoData['bairro']}, {$enderecoData['cidade']}, {$enderecoData['estado']}, {$enderecoData['cep']}";
             $enderecoFormatado = urlencode($enderecoCompleto);
-            $apiKey = "SUA_CHAVE_DE_API_DO_GOOGLE_MAPS";
+            $apiKey = "chave da api aqui";
             $url = "https://maps.googleapis.com/maps/api/geocode/json?address={$enderecoFormatado}&key={$apiKey}";
 
             $response = file_get_contents($url);
@@ -65,6 +67,7 @@ class ClienteController extends Controller
             $cliente->enderecos()->save($endereco);
             $enderecos[] = $endereco;
         }
+    }
 
         // Associar os endereços ao cliente
         $cliente->enderecos = $enderecos;
@@ -83,34 +86,21 @@ class ClienteController extends Controller
 {
     $cliente = Cliente::findOrFail($id);
 
-    $request->validate([
-        'cnpj' => 'required',
-        'razao_social' => 'required',
-        'nome_contato' => 'required',
-        'telefone' => 'required',
-        'endereco.*.id' => 'nullable',
-        'endereco.*.logradouro' => 'required',
-        'endereco.*.numero' => 'required',
-        'endereco.*.complemento' => 'nullable',
-        'endereco.*.bairro' => 'required',
-        'endereco.*.cidade' => 'required',
-        'endereco.*.estado' => 'required',
-        'endereco.*.cep' => 'required',
-    ]);
-
     $cliente->update($request->only(['cnpj', 'razao_social', 'nome_contato', 'telefone']));
 
     foreach ($request->input('endereco', []) as $enderecoData) {
-        $enderecoId = $enderecoData['id'] ?? null;
+        if (isset($enderecoData['id'])) {
+            $endereco = Endereco::findOrFail($enderecoData['id']);
 
-        if ($enderecoId) {
-            $endereco = Endereco::where('cliente_id', $id)->where('id', $enderecoId)->first();
-
-            if ($endereco) {
-                $endereco->update($enderecoData);
-            }
-        } else {
-            $cliente->enderecos()->create($enderecoData);
+            $endereco->update([
+                'logradouro' => $enderecoData['logradouro'],
+                'numero' => $enderecoData['numero'],
+                'complemento' => $enderecoData['complemento'],
+                'bairro' => $enderecoData['bairro'],
+                'cidade' => $enderecoData['cidade'],
+                'estado' => $enderecoData['estado'],
+                'cep' => $enderecoData['cep'],
+            ]);
         }
     }
 
