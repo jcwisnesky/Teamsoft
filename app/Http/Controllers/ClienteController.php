@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\Endereco;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
 
@@ -14,14 +14,26 @@ class ClienteController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $cliente = Cliente::create($request->all());
-        return response()->json($cliente, 201);
-    }
+{
+    $clienteData = $request->only(['cnpj', 'razao_social', 'nome_contato', 'telefone']);
+    $enderecoData = $request->only(['logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'cep']);
+
+    $cliente = Cliente::create($clienteData);
+
+    // Associação entre cliente e endereço
+    $endereco = new Endereco($enderecoData);
+    $cliente->enderecos()->save($endereco);
+
+    // Recupera o endereço associado ao cliente
+    $cliente['Endereco'] = $cliente->enderecos;
+
+    return response()->json($cliente, 201);
+}
 
     public function show($id)
     {
         $cliente = Cliente::findOrFail($id);
+        $cliente['Endereco'] = $cliente->enderecos;
         return response()->json($cliente);
     }
 

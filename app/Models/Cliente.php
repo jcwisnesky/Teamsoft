@@ -23,7 +23,6 @@ class Cliente extends Model
     {
         return $this->hasMany(Endereco::class, 'cliente_id');
     }
-
     public function validate()
     {
         return Validator::make($this->attributes, [
@@ -31,6 +30,7 @@ class Cliente extends Model
             'razao_social' => 'required',
             'nome_contato' => 'required',
             'telefone' => 'required',
-        ]);
+        ])->validate();
     }
+
 }
