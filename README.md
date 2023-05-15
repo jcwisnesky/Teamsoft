@@ -5,7 +5,7 @@ Este é o repositório da aplicação Teamsoft, uma API desenvolvida com Laravel
 - PHP 7.4 ou superior
 - Composer
 - Banco de dados MySQL
-- Extensões PHP necessárias (verificar o arquivo composer.json para mais detalhes)
+- Extensões PHP necessárias: pt-br-validator (verificar o arquivo composer.json para mais detalhes)
 
 ## Instalação
 
