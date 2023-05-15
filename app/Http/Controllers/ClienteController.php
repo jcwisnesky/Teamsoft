@@ -14,71 +14,37 @@ class ClienteController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'cnpj' => 'cnpj|formato_cnpj',
-            'razao_social' => 'required',
-            'nome_contato' => 'required',
-            'telefone' => 'telefone_com_ddd',
-            'endereco' => 'required|array',
-            'endereco.*.logradouro' => 'required',
-            'endereco.*.numero' => 'required',
-            'endereco.*.complemento' => 'nullable',
-            'endereco.*.bairro' => 'required',
-            'endereco.*.cidade' => 'required',
-            'endereco.*.estado' => 'required',
-            'endereco.*.cep' => 'formato_cep',
-        ]);
+{
+    $clienteData = $request->only(['cnpj', 'razao_social', 'nome_contato', 'telefone']);
+    $enderecosData = $request->input('endereco');
 
-        $clienteData = $request->only(['cnpj', 'razao_social', 'nome_contato', 'telefone']);
-        $enderecosData = $request->input('endereco');
+    $cliente = Cliente::create($clienteData);
 
-        $cliente = Cliente::create($clienteData);
+    // Salvar os endereços
+    $enderecos = [];
+    if (!is_null($enderecosData)) {
+        foreach ($enderecosData as $enderecoData) {
+            // Define latitude e longitude predefinidas
+            $enderecoData['latitude'] = 12345; // Substitua 12345 pela latitude desejada
+            $enderecoData['longitude'] = 67890; // Substitua 67890 pela longitude desejada
 
-        // Salvar os endereços
-        $enderecos = [];
-        if (!is_null($enderecosData)) {
-            foreach ($enderecosData as $enderecoData) {
-                // Obter latitude e longitude usando a API do Google Maps Geocoding
-                $enderecoCompleto = "{$enderecoData['logradouro']}, {$enderecoData['numero']}, {$enderecoData['bairro']}, {$enderecoData['cidade']}, {$enderecoData['estado']}, {$enderecoData['cep']}";
-                $enderecoFormatado = urlencode($enderecoCompleto);
-                $apiKey = "SUA_API_KEY";
+            // Salvar o endereço
+            $endereco = new Endereco($enderecoData);
 
-                // Montar a URL da API do Google Maps
-                $enderecoUrl = "https://maps.googleapis.com/maps/api/geocode/json?address={$enderecoFormatado}&key={$apiKey}";
+            // Adicionar a URL ao objeto de endereço
+            $endereco->url = "https://maps.google.com/?q={$enderecoData['latitude']},{$enderecoData['longitude']}";
 
-                $response = file_get_contents($enderecoUrl);
-                $data = json_decode($response);
-
-                if ($data->status === "OK") {
-                    $latitude = $data->results[0]->geometry->location->lat;
-                    $longitude = $data->results[0]->geometry->location->lng;
-
-                    // Adicionar latitude e longitude ao objeto de endereço
-                    $enderecoData['latitude'] = $latitude;
-                    $enderecoData['longitude'] = $longitude;
-                } else {
-                    // Define latitude e longitude como nulas
-                    $enderecoData['latitude'] = null;
-                    $enderecoData['longitude'] = null;
-                }
-
-                // Salvar o endereço
-                $endereco = new Endereco($enderecoData);
-
-                // Adicionar a URL ao objeto de endereço
-                $endereco->url = $enderecoUrl;
-
-                $cliente->enderecos()->save($endereco);
-                $enderecos[] = $endereco;
-            }
+            $cliente->enderecos()->save($endereco);
+            $enderecos[] = $endereco;
         }
-
-        // Associar os endereços ao cliente
-        $cliente->enderecos = $enderecos;
-
-        return response()->json($cliente, 201);
     }
+
+    // Associar os endereços ao cliente
+    $cliente->enderecos = $enderecos;
+
+    return response()->json($cliente, 201);
+}
+
 
     public function show($id)
     {
